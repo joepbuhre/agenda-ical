@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="assets/styles.css" />
+
+        <title>Agenda and Meeting Management</title>
+    </head>
+
+    <body>
+        <h1>Agenda and Meeting Management</h1>
+
+        <h2>Current Agendas</h2>
+        <div>
+            <ul class="row">
+                {{range .Agendas}}
+                <li>
+                    <p>Agenda {{.ID}}: {{.Name}}</p>
+                    <button
+                        style="width: 100%"
+                        onclick="createAgendaUrl({{.ID}})"
+                    >
+                        Create link
+                    </button>
+                </li>
+                {{else}}
+                <li>No agendas available.</li>
+                {{end}}
+            </ul>
+        </div>
+        <div class="row">
+            <div class="column">
+                <h2>Create Agenda</h2>
+                <form id="create-agenda-form">
+                    <label for="agenda-name">Agenda Name:</label>
+                    <input type="text" id="agenda-name" required />
+                    <button type="submit">Create Agenda</button>
+                </form>
+            </div>
+
+            <div class="column">
+                <h2>Add/Update Meeting</h2>
+                <form id="add-meeting-form">
+                    <label for="meeting-id">Meeting ID (for update):</label>
+                    <input type="number" id="meeting-id" />
+                    <br />
+                    <label for="agenda-id">Agenda ID:</label>
+                    <input type="number" id="agenda-id" required />
+                    <br />
+                    <label for="meeting-title">Meeting Title:</label>
+                    <input type="text" id="meeting-title" required />
+                    <br />
+                    <label for="start-datetime">Start DateTime:</label>
+                    <input type="datetime-local" id="start-datetime" required />
+                    <br />
+                    <label for="end-datetime">End DateTime:</label>
+                    <input type="datetime-local" id="end-datetime" required />
+                    <br />
+                    <button type="submit">Add/Update Meeting</button>
+                </form>
+            </div>
+        </div>
+        <div class="row">
+            <div class="column">
+                <h2>Delete Agenda</h2>
+                <form id="delete-agenda-form">
+                    <label for="delete-agenda-id">Agenda ID:</label>
+                    <input type="number" id="delete-agenda-id" required />
+                    <button type="submit">Delete Agenda</button>
+                </form>
+            </div>
+
+            <div class="column">
+                <h2>Delete Meeting</h2>
+                <form id="delete-meeting-form">
+                    <label for="delete-meeting-id">Meeting ID:</label>
+                    <input type="number" id="delete-meeting-id" required />
+                    <button type="submit">Delete Meeting</button>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            const uri = new URL(window.location.href);
+            const apiUrl = `${uri.protocol}//${uri.host}`;
+            const token = uri.searchParams.get("token"); // Authorization token
+
+            document.getElementById("create-agenda-form").onsubmit = function (
+                e
+            ) {
+                e.preventDefault();
+                const agendaName = document.getElementById("agenda-name").value;
+
+                fetch(`${apiUrl}/agenda?token=${token}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ name: agendaName }),
+                }).then((response) => {
+                    if (response.ok) alert("Agenda created");
+                    else alert("Failed to create agenda");
+                    window.location.reload(); // Reload the page to fetch updated data
+                });
+            };
+
+            document.getElementById("add-meeting-form").onsubmit = function (
+                e
+            ) {
+                e.preventDefault();
+                const meetingId =
+                    document.getElementById("meeting-id").value || null;
+                const agendaId = document.getElementById("agenda-id").value;
+                const meetingTitle =
+                    document.getElementById("meeting-title").value;
+                const startDateTime =
+                    document.getElementById("start-datetime").value;
+                const endDateTime =
+                    document.getElementById("end-datetime").value;
+
+                fetch(`${apiUrl}/meeting?token=${token}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        id: meetingId ? parseInt(meetingId) : null,
+                        agenda_id: parseInt(agendaId),
+                        summary: meetingTitle,
+                        start_datetime: new Date(startDateTime).toISOString(),
+                        end_datetime: new Date(endDateTime).toISOString(),
+                    }),
+                }).then((response) => {
+                    if (response.ok) alert("Meeting added/updated");
+                    else alert("Failed to add/update meeting");
+                    window.location.reload(); // Reload the page to fetch updated data
+                });
+            };
+
+            document.getElementById("delete-agenda-form").onsubmit = function (
+                e
+            ) {
+                e.preventDefault();
+                const agendaId =
+                    document.getElementById("delete-agenda-id").value;
+
+                fetch(`${apiUrl}/agenda?id=${agendaId}&token=${token}`, {
+                    method: "DELETE",
+                }).then((response) => {
+                    if (response.ok) alert("Agenda deleted");
+                    else alert("Failed to delete agenda");
+                    window.location.reload(); // Reload the page to fetch updated data
+                });
+            };
+
+            document.getElementById("delete-meeting-form").onsubmit = function (
+                e
+            ) {
+                e.preventDefault();
+                const meetingId =
+                    document.getElementById("delete-meeting-id").value;
+
+                fetch(`${apiUrl}/meeting?id=${meetingId}&token=${token}`, {
+                    method: "DELETE",
+                }).then((response) => {
+                    if (response.ok) alert("Meeting deleted");
+                    else alert("Failed to delete meeting");
+                    window.location.reload(); // Reload the page to fetch updated data
+                });
+            };
+
+            function createAgendaUrl(id) {
+                fetch(`${apiUrl}/agenda?id=${id}&token=${token}`, {
+                    method: "GET",
+                }).then((response) => {
+                    if (response.ok) {
+                        response.text().then((url) => {
+                            const newUri = uri;
+                            newUri.pathname = "";
+                            newUri.pathname = "ical";
+                            newUri.search = `?agenda=${url}`;
+                            prompt(
+                                "Created agenda, please copy the link",
+                                newUri.toString()
+                            );
+                        });
+                    } else alert("Failed to delete meeting");
+                    window.location.reload(); // Reload the page to fetch updated data
+                });
+            }
+        </script>
+    </body>
+</html>
