@@ -44,13 +44,11 @@ func main() {
 
 	// Initialize API routes with authentication middleware
 	api := r.Group("/")
-	api.Use(utils.AuthMiddleware(config.SecretToken)) // Apply the middleware to the group
-	{
-		api.GET("/agenda", handlers.GetAgendaUrl)
-		api.POST("/agenda", handlers.CreateAgenda)
-		api.DELETE("/agenda", handlers.DeleteAgenda)
-		api.PUT("/meeting", handlers.PutMeeting)
-	}
+	api.Use(utils.AuthMiddleware(config.SecretToken))
+
+	// Register all agenda routes
+	handlers.RegisterAgendaRoutes(api)
+	handlers.RegisterMeetingRoutes(api)
 
 	// Handle iCal without middleware
 	r.GET("/ical", handlers.HandleIcal)

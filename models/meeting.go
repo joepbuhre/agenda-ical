@@ -38,6 +38,12 @@ func DeleteMeeting(db *sql.DB, id string) error {
 	return err
 }
 
+func DeleteMeetingWithDates(db *sql.DB, fromDate time.Time, toDate time.Time) error {
+	_, err := db.Exec("DELETE FROM meetings WHERE start_datetime >= ? and end_datetime <= ?", fromDate, toDate)
+	log.Printf("Deleted meeting with from [%v] to [%v]", fromDate, toDate)
+	return err
+}
+
 func GetMeetings(db *sql.DB, id string) ([]DbMeeting, error) {
 	rows, err := db.Query("SELECT COALESCE(id,0),create_datetime,start_datetime,end_datetime,summary,description,location,color FROM meetings where agenda_id = ?", id)
 	if err != nil {

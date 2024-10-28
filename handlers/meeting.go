@@ -22,6 +22,33 @@ type MeetingRequest struct {
 	Color         string `json:"color"`
 }
 
+func RegisterMeetingRoutes(r *gin.RouterGroup) {
+	meeting := r.Group("/meeting")
+	{
+		meeting.GET("/:agenda-id", GetMeetings)
+		meeting.PUT("/", PutMeeting)
+		meeting.DELETE("/", DeleteMeeting)
+	}
+}
+
+func GetMeetings(c *gin.Context) {
+	db := utils.GetDB()
+
+	agenda_id, found := c.Params.Get("agenda-id")
+	if !found {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid agenda id provided"})
+		return
+	}
+
+	meetings, err := models.GetMeetings(db, agenda_id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Something went wrong with fetching the meetings"})
+		return
+	}
+
+	c.JSON(http.StatusOK, meetings)
+}
+
 func PutMeeting(c *gin.Context) {
 	db := utils.GetDB()
 
@@ -65,4 +92,28 @@ func PutMeeting(c *gin.Context) {
 	}
 
 	c.Status(http.StatusCreated)
+}
+
+func DeleteMeeting(c *gin.Context) {
+	db := utils.GetDB()
+
+	fromDate := c.Query("from_date")
+	toDate := c.Query("to_date")
+
+	// Parse the start and end datetime
+	fromDT, err := time.Parse(time.DateOnly, fromDate)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid start datetime format"})
+		return
+	}
+
+	toDT, err := time.Parse(time.DateOnly, toDate)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid end datetime format"})
+		return
+	}
+
+	log.Println("Deleting: ", fromDT, toDT)
+
+	models.DeleteMeetingWithDates(db, fromDT, toDT)
 }

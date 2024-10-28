@@ -11,6 +11,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func RegisterAgendaRoutes(r *gin.RouterGroup) {
+	agenda := r.Group("/agenda")
+	{
+		agenda.GET("/", GetAgendaUrl)
+		agenda.POST("/", CreateAgenda)
+		agenda.DELETE("/", DeleteAgenda)
+	}
+}
+
 func CreateAgenda(c *gin.Context) {
 	db := utils.GetDB()
 
