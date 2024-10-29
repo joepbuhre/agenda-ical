@@ -50,8 +50,9 @@ func GetAgendaUrl(db *sql.DB, id int) string {
 	if err != nil {
 		return ""
 	}
-	_, err = db.Exec("INSERT INTO agendaurls (agenda_id, code) VALUES (?, ?)", id, str)
-	log.Printf("inserted record into agenda with id [%s] and code [%v]", id, str)
+	db.Exec("INSERT INTO agendaurls (agenda_id, code) VALUES (?, ?)", id, str)
+
+	log.Printf("inserted record into agenda with id [%v] and code [%v]", id, str)
 
 	return str
 }
