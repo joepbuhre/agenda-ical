@@ -80,3 +80,24 @@ func GetMeetingsByCode(db *sql.DB, code string) ([]DbMeeting, error) {
 	}
 	return meetings, nil
 }
+
+func GetMeetingsByCodeAndDate(db *sql.DB, fromDate time.Time, toDate time.Time, code string) ([]DbMeeting, error) {
+	log.Println(code)
+	log.Println(fromDate)
+	log.Println(toDate)
+	rows, err := db.Query("SELECT COALESCE(id, 0),create_datetime,start_datetime,end_datetime,summary,description,location,color FROM meetings where start_datetime >= ? and end_datetime < ? and agenda_id = (select agenda_id from agendaurls where code = ? LIMIT 1)", fromDate, toDate, code)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	meetings := []DbMeeting{}
+	for rows.Next() {
+		var meeting DbMeeting
+		if err := rows.Scan(&meeting.Id, &meeting.CreateDateTime, &meeting.StartDateTime, &meeting.EndDateTime, &meeting.Summary, &meeting.Description, &meeting.Location, &meeting.Color); err != nil {
+			return nil, err
+		}
+		meetings = append(meetings, meeting)
+	}
+	return meetings, nil
+}

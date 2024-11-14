@@ -48,3 +48,16 @@ func GetIcal(agendaCode string) (string, error) {
 
 	return cal.Serialize(), nil
 }
+
+func GetJson(agendaCode string, fromDate time.Time, toDate time.Time) ([]DbMeeting, error) {
+	// Because todate is less then (not equal)
+	toDate = toDate.AddDate(0, 0, 1)
+	meetings, err := GetMeetingsByCodeAndDate(utils.GetDB(), fromDate, toDate, agendaCode)
+
+	if err != nil {
+		log.Println(err)
+		return []DbMeeting{}, err
+	}
+
+	return meetings, nil
+}

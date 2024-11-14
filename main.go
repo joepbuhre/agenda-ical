@@ -52,6 +52,7 @@ func main() {
 
 	// Handle iCal without middleware
 	r.GET("/ical", handlers.HandleIcal)
+	r.GET("/ical/json", handlers.HandleJson)
 
 	// Start the server
 	log.Println("Server started at :8080")

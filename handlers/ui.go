@@ -21,6 +21,7 @@ func HandleUI(c *gin.Context) {
 
 	// Fetch all agendas and meetings
 	agendas, err := models.GetAgendas(db)
+	log.Println(agendas)
 	if err != nil {
 		log.Println("Error fetching agendas:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error fetching agendas"})
